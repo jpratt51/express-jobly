@@ -17,14 +17,43 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
     const cols = keys.map(
         (colName, idx) => `"${jsToSql[colName] || colName}"=$${idx + 1}`
     );
-    console.log({
-        setCols: cols.join(', '),
-        values: Object.values(dataToUpdate),
-    });
     return {
         setCols: cols.join(', '),
         values: Object.values(dataToUpdate),
     };
 }
 
-module.exports = { sqlForPartialUpdate };
+/** Helpers: SQL for Companies Filter.
+ *
+ * Converts user input into sql for filtering companies:
+ * {name: 'net', minEmployees: 200} => ['"name"=$1', '"num_employees" > $2']
+ *
+ * Will accept provided fields even if not all fields are provided and only update * provided fields.
+ *
+ * If no input is sent, throws BadRequestError.
+ */
+
+function sqlForCompaniesFilter(filterCriteria) {
+    let filters = [];
+    let idx = 1;
+    if (filterCriteria.name) {
+        filters.push(`"name"=$${idx}`);
+        idx++;
+    }
+    if (filterCriteria.minEmployees && filterCriteria.maxEmployees) {
+        filters.push(
+            `"num_employees < $${idx} AND num_employees > $${idx + 1}`
+        );
+    } else {
+        if (filterCriteria.minEmployees) {
+            filters.push(`"num_employees>$${idx}`);
+            idx++;
+        }
+        if (filterCriteria.maxEmployees) {
+            filters.push(`"num_employees<$${idx}`);
+        }
+    }
+    return filters;
+}
+
+module.exports = { sqlForPartialUpdate, sqlForCompaniesFilter };
