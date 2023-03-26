@@ -37,22 +37,22 @@ function sqlForCompaniesFilter(filterCriteria) {
     let filters = [];
     let idx = 1;
     if (filterCriteria.name) {
-        filters.push(`"name" ILIKE '%$${idx}%'`);
+        filters.push(`name ILIKE '%${filterCriteria.name}%'`);
         idx++;
     }
     if (filterCriteria.minEmployees && filterCriteria.maxEmployees) {
         if (filterCriteria.minEmployees > filterCriteria.maxEmployees)
             throw new NotFoundError();
         filters.push(
-            `"num_employees < $${idx} AND num_employees > $${idx + 1}`
+            `num_employees < ${filterCriteria.maxEmployees} AND num_employees > ${filterCriteria.minEmployees}`
         );
     } else {
         if (filterCriteria.minEmployees) {
-            filters.push(`"num_employees>$${idx}`);
+            filters.push(`num_employees > ${filterCriteria.minEmployees}`);
             idx++;
         }
         if (filterCriteria.maxEmployees) {
-            filters.push(`"num_employees<$${idx}`);
+            filters.push(`num_employees < ${filterCriteria.maxEmployees}`);
         }
     }
     return filters;
