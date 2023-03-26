@@ -25,12 +25,10 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
 
 /** Helpers: SQL for Companies Filter.
  *
- * Converts user input into sql for filtering companies:
+ * Parses and converts user input into sql for filtering companies:
  * {name: 'net', minEmployees: 200} => ['"name"=$1', '"num_employees" > $2']
  *
- * Will accept provided fields even if not all fields are provided and only update * provided fields.
- *
- * If no input is sent, throws BadRequestError.
+ * Will accept provided filters even if not all filters are provided.
  */
 
 function sqlForCompaniesFilter(filterCriteria) {
