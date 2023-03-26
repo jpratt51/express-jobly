@@ -35,7 +35,7 @@ function sqlForCompaniesFilter(filterCriteria) {
     let filters = [];
     let idx = 1;
     if (filterCriteria.name) {
-        filters.push(`"name"=$${idx}`);
+        filters.push(`"name" ILIKE '$$${idx}$'`);
         idx++;
     }
     if (filterCriteria.minEmployees && filterCriteria.maxEmployees) {
