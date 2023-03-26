@@ -17,7 +17,10 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
     const cols = keys.map(
         (colName, idx) => `"${jsToSql[colName] || colName}"=$${idx + 1}`
     );
-
+    console.log({
+        setCols: cols.join(', '),
+        values: Object.values(dataToUpdate),
+    });
     return {
         setCols: cols.join(', '),
         values: Object.values(dataToUpdate),

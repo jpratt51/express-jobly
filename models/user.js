@@ -171,7 +171,6 @@ class User {
             lastName: 'last_name',
             isAdmin: 'is_admin',
         });
-        console.log(setCols, values);
         const usernameVarIdx = '$' + (values.length + 1);
 
         const querySql = `UPDATE users 
