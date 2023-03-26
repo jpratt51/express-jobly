@@ -1,4 +1,4 @@
-const { BadRequestError } = require('../expressError');
+const { BadRequestError, NotFoundError } = require('../expressError');
 
 /** Helpers: SQL for Update.
  *
@@ -26,19 +26,23 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
 /** Helpers: SQL for Companies Filter.
  *
  * Parses and converts user input into sql for filtering companies:
- * {name: 'net', minEmployees: 200} => ['"name"=$1', '"num_employees" > $2']
+ * {name: 'net', minEmployees: 200} => ['"name" ILIKE '%$1%'', '"num_employees" > $2']
  *
  * Will accept provided filters even if not all filters are provided.
+ *
+ * If minEmployees > maxEmployees, throws 404 error.
  */
 
 function sqlForCompaniesFilter(filterCriteria) {
     let filters = [];
     let idx = 1;
     if (filterCriteria.name) {
-        filters.push(`"name" ILIKE '$$${idx}$'`);
+        filters.push(`"name" ILIKE '%$${idx}%'`);
         idx++;
     }
     if (filterCriteria.minEmployees && filterCriteria.maxEmployees) {
+        if (filterCriteria.minEmployees > filterCriteria.maxEmployees)
+            throw new NotFoundError();
         filters.push(
             `"num_employees < $${idx} AND num_employees > $${idx + 1}`
         );
