@@ -23,10 +23,12 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
     };
 }
 
-/** Helpers: SQL for Companies Filter.
+/** SQL for Companies Filter.
  *
  * Parses and converts user input into sql for filtering companies:
- * {name: 'net', minEmployees: 200} => ['"name" ILIKE '%$1%'', '"num_employees" > $2']
+ * {name: 'net', minEmployees: 200} => ['"name" ILIKE '%net%'', '"num_employees" >= 200']
+ *
+ * Searching by name is case insensitive by use of ILIKE operator.
  *
  * Will accept provided filters even if not all filters are provided.
  *
@@ -44,15 +46,15 @@ function sqlForCompaniesFilter(filterCriteria) {
         if (filterCriteria.minEmployees > filterCriteria.maxEmployees)
             throw new NotFoundError();
         filters.push(
-            `num_employees < ${filterCriteria.maxEmployees} AND num_employees > ${filterCriteria.minEmployees}`
+            `num_employees BETWEEN ${filterCriteria.minEmployees} AND ${filterCriteria.maxEmployees}`
         );
     } else {
         if (filterCriteria.minEmployees) {
-            filters.push(`num_employees > ${filterCriteria.minEmployees}`);
+            filters.push(`num_employees >= ${filterCriteria.minEmployees}`);
             idx++;
         }
         if (filterCriteria.maxEmployees) {
-            filters.push(`num_employees < ${filterCriteria.maxEmployees}`);
+            filters.push(`num_employees <= ${filterCriteria.maxEmployees}`);
         }
     }
     return filters;

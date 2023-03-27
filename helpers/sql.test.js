@@ -1,5 +1,17 @@
-const { sqlForPartialUpdate } = require('./sql');
-const { BadRequestError } = require('../expressError');
+const { sqlForPartialUpdate, sqlForCompaniesFilter } = require('./sql');
+const { BadRequestError, NotFoundError } = require('../expressError');
+
+const {
+    commonBeforeAll,
+    commonBeforeEach,
+    commonAfterEach,
+    commonAfterAll,
+} = require('../models/_testCommon');
+
+beforeAll(commonBeforeAll);
+beforeEach(commonBeforeEach);
+afterEach(commonAfterEach);
+afterAll(commonAfterAll);
 
 describe('sqlForPartialUpdate', function () {
     test('converts JS to SQL for update', function () {
@@ -27,6 +39,61 @@ describe('sqlForPartialUpdate', function () {
             fail();
         } catch (e) {
             expect(e instanceof BadRequestError).toBeTruthy();
+        }
+    });
+});
+
+describe('sqlForCompaniesFilter', function () {
+    test('Parses and converts JS to SQL for filtering companies', function () {
+        const userInput = {
+            name: 'c',
+            minEmployees: 1,
+            maxEmployees: 2,
+        };
+        const jsToSql = sqlForCompaniesFilter(userInput);
+        expect(jsToSql).toEqual([
+            "name ILIKE '%c%'",
+            'num_employees BETWEEN 1 AND 2',
+        ]);
+    });
+    test('Works for name only user input', function () {
+        const userInput = {
+            name: 'c',
+        };
+        const jsToSql = sqlForCompaniesFilter(userInput);
+        expect(jsToSql).toEqual(["name ILIKE '%c%'"]);
+    });
+    test('Works for minEmployees only user input', function () {
+        const userInput = {
+            minEmployees: 2,
+        };
+        const jsToSql = sqlForCompaniesFilter(userInput);
+        expect(jsToSql).toEqual(['num_employees >= 2']);
+    });
+    test('Works for maxEmployees only user input', function () {
+        const userInput = {
+            maxEmployees: 2,
+        };
+        const jsToSql = sqlForCompaniesFilter(userInput);
+        expect(jsToSql).toEqual(['num_employees <= 2']);
+    });
+    test('Works for maxEmployees only user input', function () {
+        const userInput = {
+            minEmployees: 1,
+            maxEmployees: 2,
+        };
+        const jsToSql = sqlForCompaniesFilter(userInput);
+        expect(jsToSql).toEqual(['num_employees BETWEEN 1 AND 2']);
+    });
+    test('If minEmployees > maxEmployees, throws 404 error.', function () {
+        try {
+            sqlForCompaniesFilter({
+                minEmployees: 2,
+                maxEmployees: 1,
+            });
+            fail();
+        } catch (e) {
+            expect(e instanceof NotFoundError).toBeTruthy();
         }
     });
 });
