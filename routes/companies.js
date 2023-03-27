@@ -52,8 +52,12 @@ router.post('/', ensureLoggedIn, async function (req, res, next) {
 router.get('/', async function (req, res, next) {
     try {
         let companies;
-        if (req.body) {
-            companies = await Company.findAll(req.body);
+        if (
+            req.query.name ||
+            req.query.minEmployees ||
+            req.query.maxEmployees
+        ) {
+            companies = await Company.findAll(req.query);
         } else {
             companies = await Company.findAll();
         }
