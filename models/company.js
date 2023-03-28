@@ -52,7 +52,6 @@ class Company {
         if (filters) {
             const filterInputs = sqlForCompaniesFilter(filters);
             const companyFilters = filterInputs.join(' AND ');
-            console.log(companyFilters);
             companiesRes = await db.query(
                 `SELECT handle,
                     name,
