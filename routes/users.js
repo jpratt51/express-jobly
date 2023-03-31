@@ -92,14 +92,20 @@ router.get('/:username', ensureLoggedIn, async function (req, res, next) {
 
 router.patch('/:username', ensureLoggedIn, async function (req, res, next) {
     try {
-        const validator = jsonschema.validate(req.body, userUpdateSchema);
-        if (!validator.valid) {
-            const errs = validator.errors.map((e) => e.stack);
-            throw new BadRequestError(errs);
-        }
+        if (
+            req.params.username === res.locals.user.username ||
+            res.locals.user.isAdmin === true
+        ) {
+            const validator = jsonschema.validate(req.body, userUpdateSchema);
+            if (!validator.valid) {
+                const errs = validator.errors.map((e) => e.stack);
+                throw new BadRequestError(errs);
+            }
 
-        const user = await User.update(req.params.username, req.body);
-        return res.json({ user });
+            const user = await User.update(req.params.username, req.body);
+            return res.json({ user });
+        }
+        throw new UnauthorizedError();
     } catch (err) {
         return next(err);
     }
@@ -112,8 +118,14 @@ router.patch('/:username', ensureLoggedIn, async function (req, res, next) {
 
 router.delete('/:username', ensureLoggedIn, async function (req, res, next) {
     try {
-        await User.remove(req.params.username);
-        return res.json({ deleted: req.params.username });
+        if (
+            req.params.username === res.locals.user.username ||
+            res.locals.user.isAdmin === true
+        ) {
+            await User.remove(req.params.username);
+            return res.json({ deleted: req.params.username });
+        }
+        throw new UnauthorizedError();
     } catch (err) {
         return next(err);
     }
