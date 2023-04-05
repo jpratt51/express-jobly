@@ -2,7 +2,7 @@
 
 const db = require('../db');
 const { NotFoundError } = require('../expressError');
-const { sqlForPartialUpdate } = require('../helpers/sql');
+const { sqlForPartialUpdate, sqlForJobsFilter } = require('../helpers/sql');
 
 /** Related functions for jobs. */
 
@@ -16,7 +16,7 @@ class Job {
      * Throws BadRequestError if job already in database.
      * */
 
-    static async create({ id, title, salary, equity, companyHandle }) {
+    static async create({ title, salary, equity, companyHandle }) {
         const result = await db.query(
             `INSERT INTO jobs
            (title, salary, equity, company_handle)
@@ -29,21 +29,42 @@ class Job {
         return job;
     }
 
-    /** Find all jobs.
+    /** Find all jobs. Takes optional filters to narrow results: title, minSalary, hasEquity
+     *
+     * Works with no filters or with select filters, all are optional.
+     *
+     * title filter will return only jobs that contain the title query.
+     * minSalary filter will return only jobs greater than the minSalary query.
+     * hasEquity filter will return only jobs that have equity greater than zero.
      *
      * Returns [{ id, title, salary, equity, companyHandle }, ...]
      * */
 
-    static async findAll() {
-        const jobsRes = await db.query(
-            `SELECT id,
-                title,
-                salary,
-                equity,
-                company_handle AS "companyHandle"
-            FROM jobs
-            ORDER BY title`
-        );
+    static async findAll(filters) {
+        let jobsRes;
+        if (filters) {
+            const filterInputs = sqlForJobsFilter(filters);
+            const jobFilters = filterInputs.join(' AND ');
+            jobsRes = await db.query(
+                `SELECT id,
+                    title,
+                    salary,
+                    equity,
+                    company_handle AS "companyHandle"
+                FROM jobs
+                WHERE ${jobFilters} ORDER BY title`
+            );
+        } else {
+            jobsRes = await db.query(
+                `SELECT id,
+                    title,
+                    salary,
+                    equity,
+                    company_handle AS "companyHandle"
+                FROM jobs
+                ORDER BY title`
+            );
+        }
         return jobsRes.rows;
     }
 

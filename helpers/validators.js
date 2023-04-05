@@ -4,7 +4,7 @@
  * Returns new object containing parsed queries.
  */
 
-function parseQueries(queryParams) {
+function parseCompaniesQueries(queryParams) {
     let params = {};
     if (queryParams.name) {
         params['name'] = queryParams.name;
@@ -18,4 +18,24 @@ function parseQueries(queryParams) {
     return params;
 }
 
-module.exports = { parseQueries };
+/** Parse job queries
+ *
+ * Parses user query input for title, minSalary and hasEquity and converts minSalary and hasEquity to integers.
+ * Returns new object containing parsed queries.
+ */
+
+function parseJobsQueries(queryParams) {
+    let params = {};
+    if (queryParams.title) {
+        params['title'] = queryParams.title;
+    }
+    if (queryParams.minSalary) {
+        params['minSalary'] = Number(queryParams.minSalary);
+    }
+    if (queryParams.hasEquity) {
+        params['hasEquity'] = Boolean(queryParams.hasEquity);
+    }
+    return params;
+}
+
+module.exports = { parseCompaniesQueries, parseJobsQueries };

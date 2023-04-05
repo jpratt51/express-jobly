@@ -121,6 +121,10 @@ describe('GET /companies', function () {
         });
     });
 
+    // test only minEmployees
+
+    // test only maxEmployees
+
     test('test 404 response for min higher than max', async function () {
         const resp = await request(app)
             .get('/companies')
@@ -152,6 +156,14 @@ describe('GET /companies/:handle', function () {
                 description: 'Desc1',
                 numEmployees: 1,
                 logoUrl: 'http://c1.img',
+                jobs: [
+                    {
+                        equity: '0',
+                        id: expect.any(Number),
+                        salary: 10,
+                        title: 'j1',
+                    },
+                ],
             },
         });
     });
@@ -165,6 +177,14 @@ describe('GET /companies/:handle', function () {
                 description: 'Desc2',
                 numEmployees: 2,
                 logoUrl: 'http://c2.img',
+                jobs: [
+                    {
+                        equity: '0.5',
+                        id: expect.any(Number),
+                        salary: 20,
+                        title: 'j2',
+                    },
+                ],
             },
         });
     });

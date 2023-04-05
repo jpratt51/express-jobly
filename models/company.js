@@ -42,7 +42,15 @@ class Company {
         return company;
     }
 
-    /** Find all companies.
+    /** Find all companies. Takes optional filters to narrow results: name, minEmployees, maxEmployees
+     *
+     * Works with no filters or with select filters, all are optional.
+     *
+     * name filter will return only companies with names that contain the name query input.
+     * minEmployees filter will return only companies with employees greater than minEmployees input.
+     * maxEmployees filter will return only companies with employees less than maxEmployees input.
+     *
+     * if both minEmployees and maxEmployees queries are set, will return companies whose employees are between the min and max employees queries.
      *
      * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
      * */
@@ -95,8 +103,16 @@ class Company {
             [handle]
         );
 
-        const company = companyRes.rows[0];
+        const jobsRes = await db.query(
+            `SELECT id, title, salary, equity FROM jobs 
+             WHERE company_handle = $1`,
+            [handle]
+        );
 
+        const company = companyRes.rows[0];
+        try {
+            company.jobs = jobsRes.rows;
+        } catch {}
         if (!company) throw new NotFoundError(`No company: ${handle}`);
 
         return company;

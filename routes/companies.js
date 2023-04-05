@@ -8,7 +8,7 @@ const express = require('express');
 const { BadRequestError } = require('../expressError');
 const { ensureLoggedIn, ensureAdmin } = require('../middleware/auth');
 const Company = require('../models/company');
-const { parseQueries } = require('../helpers/validators');
+const { parseCompaniesQueries } = require('../helpers/validators');
 
 const companyNewSchema = require('../schemas/companyNew.json');
 const companyUpdateSchema = require('../schemas/companyUpdate.json');
@@ -60,7 +60,7 @@ router.get('/', async function (req, res, next) {
             req.query.minEmployees ||
             req.query.maxEmployees
         ) {
-            params = parseQueries(req.query);
+            params = parseCompaniesQueries(req.query);
             const validator = jsonschema.validate(params, companyFilterSchema);
             if (!validator.valid) {
                 const errs = validator.errors.map((e) => e.stack);
@@ -101,7 +101,7 @@ router.get('/:handle', async function (req, res, next) {
  *
  * Returns { handle, name, description, numEmployees, logo_url }
  *
- * Authorization required: login
+ * Authorization required: admin, login
  */
 
 router.patch(
@@ -114,7 +114,7 @@ router.patch(
                 req.body,
                 companyUpdateSchema
             );
-            if (!validator.valid) {
+            if (!validator.valid || req.body.handle) {
                 const errs = validator.errors.map((e) => e.stack);
                 throw new BadRequestError(errs);
             }

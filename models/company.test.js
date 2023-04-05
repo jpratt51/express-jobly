@@ -176,6 +176,14 @@ describe('get', function () {
             description: 'Desc1',
             numEmployees: 1,
             logoUrl: 'http://c1.img',
+            jobs: [
+                {
+                    equity: '0',
+                    id: expect.any(Number),
+                    salary: 55000,
+                    title: 'test',
+                },
+            ],
         });
     });
 
@@ -184,6 +192,7 @@ describe('get', function () {
             await Company.get('nope');
             fail();
         } catch (err) {
+            console.log(err);
             expect(err instanceof NotFoundError).toBeTruthy();
         }
     });

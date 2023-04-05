@@ -60,4 +60,27 @@ function sqlForCompaniesFilter(filterCriteria) {
     return filters;
 }
 
-module.exports = { sqlForPartialUpdate, sqlForCompaniesFilter };
+function sqlForJobsFilter(filterCriteria) {
+    let filters = [];
+    let idx = 1;
+    if (filterCriteria.title) {
+        filters.push(`title ILIKE '%${filterCriteria.title}%'`);
+        idx++;
+    }
+    if (filterCriteria.minSalary) {
+        filters.push(`salary >= ${filterCriteria.minSalary}`);
+        idx++;
+    }
+    if (filterCriteria.hasEquity === 'true') {
+        filters.push(`equity > 0`);
+    } else if (filterCriteria.hasEquity === 'false') {
+        filters.push(`equity = 0`);
+    }
+    return filters;
+}
+
+module.exports = {
+    sqlForPartialUpdate,
+    sqlForCompaniesFilter,
+    sqlForJobsFilter,
+};
