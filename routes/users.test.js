@@ -126,6 +126,68 @@ describe('POST /users', function () {
     });
 });
 
+/************************************** POST /users/:username/jobs/:id */
+
+describe('POST /users/:username/jobs/:id', function () {
+    test('works for Admin', async function () {
+        let jobQuery = await db.query(`SELECT * FROM jobs WHERE title = 'j1'`);
+        let jobId = jobQuery.rows[0].id;
+        const resp = await request(app)
+            .post(`/users/${'u4'}/jobs/${jobId}`)
+            .set('authorization', `Bearer ${u4Token}`);
+        expect(resp.statusCode).toEqual(201);
+        expect(resp.body).toEqual({
+            applied: String(jobId),
+        });
+    });
+
+    test('works for same username logged in user', async function () {
+        let jobQuery = await db.query(`SELECT * FROM jobs WHERE title = 'j1'`);
+        let jobId = jobQuery.rows[0].id;
+        const resp = await request(app)
+            .post(`/users/${'u1'}/jobs/${jobId}`)
+            .set('authorization', `Bearer ${u1Token}`);
+        expect(resp.statusCode).toEqual(201);
+        expect(resp.body).toEqual({
+            applied: String(jobId),
+        });
+    });
+
+    test('fails for different username non Admin logged in user', async function () {
+        let jobQuery = await db.query(`SELECT * FROM jobs WHERE title = 'j1'`);
+        let jobId = jobQuery.rows[0].id;
+        const resp = await request(app)
+            .post(`/users/${'u2'}/jobs/${jobId}`)
+            .set('authorization', `Bearer ${u1Token}`);
+        expect(resp.statusCode).toEqual(401);
+    });
+
+    test('fails for unauth', async function () {
+        let jobQuery = await db.query(`SELECT * FROM jobs WHERE title = 'j1'`);
+        let jobId = jobQuery.rows[0].id;
+        const resp = await request(app).post(`/users/${'u2'}/jobs/${jobId}`);
+        expect(resp.statusCode).toEqual(401);
+    });
+
+    test('fails if bad username provided', async function () {
+        let jobQuery = await db.query(`SELECT * FROM jobs WHERE title = 'j1'`);
+        let jobId = jobQuery.rows[0].id;
+        const resp = await request(app)
+            .post(`/users/fake/jobs/${jobId}`)
+            .set('authorization', `Bearer ${u4Token}`);
+        expect(resp.statusCode).toEqual(500);
+    });
+
+    test('fails if bad job_id provided', async function () {
+        let jobQuery = await db.query(`SELECT * FROM jobs WHERE title = 'j1'`);
+        let jobId = jobQuery.rows[0].id;
+        const resp = await request(app)
+            .post(`/users/${'u4'}/jobs/seven`)
+            .set('authorization', `Bearer ${u4Token}`);
+        expect(resp.statusCode).toEqual(400);
+    });
+});
+
 /************************************** GET /users */
 
 describe('GET /users', function () {
@@ -205,6 +267,29 @@ describe('GET /users/:username', function () {
                 lastName: 'U1L',
                 email: 'user1@user.com',
                 isAdmin: false,
+            },
+        });
+    });
+
+    test('displays job applications when present', async function () {
+        let jobQuery = await db.query(`SELECT * FROM jobs WHERE title = 'j1'`);
+        let jobId = jobQuery.rows[0].id;
+        const response = await request(app)
+            .post(`/users/${'u4'}/jobs/${jobId}`)
+            .set('authorization', `Bearer ${u4Token}`);
+        expect(response.statusCode).toEqual(201);
+
+        const resp = await request(app)
+            .get(`/users/u4`)
+            .set('authorization', `Bearer ${u4Token}`);
+        expect(resp.body).toEqual({
+            user: {
+                username: 'u4',
+                firstName: 'U4F',
+                lastName: 'U4L',
+                email: 'user4@user.com',
+                isAdmin: true,
+                jobs: [{ job_id: jobId }],
             },
         });
     });

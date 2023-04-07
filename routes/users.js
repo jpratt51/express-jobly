@@ -11,6 +11,7 @@ const User = require('../models/user');
 const { createToken } = require('../helpers/tokens');
 const userNewSchema = require('../schemas/userNew.json');
 const userUpdateSchema = require('../schemas/userUpdate.json');
+const applyNewSchema = require('../schemas/applyNew.json');
 
 const router = express.Router();
 
@@ -42,6 +43,50 @@ router.post('/', ensureLoggedIn, ensureAdmin, async function (req, res, next) {
     }
 });
 
+/** POST / { username, job_id }  => { username, id }
+ *
+ * Adds a new job application to database. The new application can be added by either the logged in user or an
+ * admin.
+ *
+ * This returns application confirmation:
+ *  { applied: job_id }
+ *
+ * Authorization required: login and/or admin
+ **/
+
+router.post(
+    '/:username/jobs/:id',
+    ensureLoggedIn,
+    async function (req, res, next) {
+        try {
+            if (
+                req.params.username === res.locals.user.username ||
+                res.locals.user.isAdmin === true
+            ) {
+                let params = {
+                    username: req.params.username,
+                    id: Number(req.params.id),
+                };
+                const validator = jsonschema.validate(params, applyNewSchema);
+                if (!validator.valid) {
+                    const errs = validator.errors.map((e) => e.stack);
+                    throw new BadRequestError(errs);
+                }
+
+                let application = await User.apply({
+                    username: req.params.username,
+                    id: req.params.id,
+                });
+                console.log(application);
+                return res.status(201).json({ applied: req.params.id });
+            }
+            throw new UnauthorizedError();
+        } catch (err) {
+            return next(err);
+        }
+    }
+);
+
 /** GET / => { users: [ {username, firstName, lastName, email }, ... ] }
  *
  * Returns list of all users.
@@ -62,7 +107,7 @@ router.get('/', ensureLoggedIn, ensureAdmin, async function (req, res, next) {
  *
  * Returns { username, firstName, lastName, isAdmin }
  *
- * Authorization required: login
+ * Authorization required: login and/or admin
  **/
 
 router.get('/:username', ensureLoggedIn, async function (req, res, next) {
@@ -87,7 +132,7 @@ router.get('/:username', ensureLoggedIn, async function (req, res, next) {
  *
  * Returns { username, firstName, lastName, email, isAdmin }
  *
- * Authorization required: login
+ * Authorization required: login and/or admin
  **/
 
 router.patch('/:username', ensureLoggedIn, async function (req, res, next) {
@@ -113,7 +158,7 @@ router.patch('/:username', ensureLoggedIn, async function (req, res, next) {
 
 /** DELETE /[username]  =>  { deleted: username }
  *
- * Authorization required: login
+ * Authorization required: login and/or admin
  **/
 
 router.delete('/:username', ensureLoggedIn, async function (req, res, next) {
